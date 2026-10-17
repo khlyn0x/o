@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ødin Downloader — حمّل من أي منصة</title>
+<meta name="description" content="حمّل فيديوهات وصور وصوتيات من تيك توك وانستجرام وفيسبوك ويوتيوب وغيرهم بضغطة واحدة.">
+<meta name="theme-color" content="#07060f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+@property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+:root{
+  --bg:#07060f; --bg2:#0d0b1c; --card:rgba(255,255,255,.045); --line:rgba(255,255,255,.09);
+  --txt:#f1efff; --mut:#9a96bd; --p1:#8b5cf6; --p2:#06b6d4; --p3:#f472b6; --ok:#34d399; --err:#fb7185;
+  --grad:linear-gradient(135deg,var(--p1),var(--p2) 55%,var(--p3));
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Cairo',system-ui,sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden;line-height:1.7;min-height:100vh}
+::selection{background:var(--p1);color:#fff}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:#2a2550;border-radius:8px}
+
+/* ── خلفية ── */
+#fx{position:fixed;inset:0;z-index:-3;width:100%;height:100%}
+.mesh{position:fixed;inset:0;z-index:-2;overflow:hidden;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;animation:float 18s ease-in-out infinite}
+.orb.a{width:520px;height:520px;background:var(--p1);top:-140px;right:-120px}
+.orb.b{width:460px;height:460px;background:var(--p2);bottom:-160px;left:-120px;animation-delay:-6s;opacity:.35}
+.orb.c{width:360px;height:360px;background:var(--p3);top:40%;left:35%;animation-delay:-12s;opacity:.22}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(60px,-50px) scale(1.12)}66%{transform:translate(-50px,40px) scale(.92)}}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ── نافبار ── */
+nav{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:50;width:min(1080px,calc(100% - 28px));
+  display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-radius:18px;
+  background:rgba(13,11,28,.6);backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line);
+  animation:drop .9s cubic-bezier(.2,.9,.2,1) both}
+@keyframes drop{from{opacity:0;transform:translate(-50%,-30px)}}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.2rem;text-decoration:none;color:var(--txt)}
+.logo i{width:34px;height:34px;border-radius:11px;background:var(--grad);display:grid;place-items:center;font-style:normal;box-shadow:0 0 24px rgba(139,92,246,.6);animation:pulseGlow 3s infinite}
+@keyframes pulseGlow{50%{box-shadow:0 0 38px rgba(6,182,212,.75)}}
+nav ul{display:flex;gap:6px;list-style:none}
+nav a.l{color:var(--mut);text-decoration:none;font-size:.92rem;padding:6px 14px;border-radius:10px;transition:.25s}
+nav a.l:hover{color:#fff;background:rgba(255,255,255,.07)}
+@media(max-width:640px){nav ul{display:none}}
+
+/* ── Hero ── */
+.wrap{width:min(1080px,calc(100% - 32px));margin-inline:auto}
+header.hero{padding:150px 0 40px;text-align:center}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:.85rem;color:var(--mut);animation:rise .8s .1s both}
+.badge b{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(52,211,153,.7);animation:ping 1.8s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 10px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+h1{font-size:clamp(2.3rem,7vw,4.6rem);font-weight:900;line-height:1.2;margin:22px 0 14px;animation:rise .9s .2s both}
+.shimmer{background:linear-gradient(110deg,var(--p1),var(--p2),var(--p3),var(--p1));background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 5s linear infinite}
+@keyframes shine{to{background-position:-250% 0}}
+.sub{color:var(--mut);font-size:clamp(1rem,2.4vw,1.2rem);max-width:640px;margin:0 auto 38px;animation:rise .9s .35s both}
+@keyframes rise{from{opacity:0;transform:translateY(28px)}}
+
+/* ── صندوق الإدخال ── */
+.box{position:relative;max-width:760px;margin:0 auto;border-radius:24px;padding:2px;animation:rise .9s .5s both;
+  background:conic-gradient(from var(--angle),var(--p1),var(--p2),var(--p3),var(--p1));animation:rise .9s .5s both,spin 6s linear infinite}
+@keyframes spin{to{--angle:360deg}}
+.box::after{content:'';position:absolute;inset:-14px;border-radius:34px;background:inherit;filter:blur(28px);opacity:.35;z-index:-1}
+.inner{background:var(--bg2);border-radius:22px;padding:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.field{flex:1 1 260px;display:flex;align-items:center;gap:10px;padding:0 14px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;transition:.25s}
+.field:focus-within{border-color:var(--p2);box-shadow:0 0 0 4px rgba(6,182,212,.14)}
+.field svg{flex:none;opacity:.6}
+#url{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--txt);font:inherit;padding:16px 0;direction:ltr;text-align:left}
+#url::placeholder{color:#6d6993;direction:rtl}
+.mini{background:none;border:1px solid var(--line);color:var(--mut);font:inherit;font-size:.8rem;padding:5px 12px;border-radius:10px;cursor:pointer;transition:.25s}
+.mini:hover{color:#fff;border-color:var(--p1);background:rgba(139,92,246,.15)}
+.go{position:relative;overflow:hidden;border:0;cursor:pointer;font:inherit;font-weight:700;color:#fff;padding:16px 34px;border-radius:16px;background:var(--grad);display:flex;align-items:center;gap:10px;transition:.3s;flex:0 0 auto}
+.go:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(139,92,246,.5)}
+.go:active{transform:scale(.97)}
+.go::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.4) 50%,transparent 70%);transform:translateX(120%);transition:.7s}
+.go:hover::before{transform:translateX(-120%)}
+.go[disabled]{opacity:.7;cursor:wait;transform:none}
+.spin{width:18px;height:18px;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;display:none}
+.go.loading .spin{display:block}.go.loading .arrow{display:none}
+@keyframes rot{to{transform:rotate(360deg)}}
+.detect{height:30px;margin-top:16px;color:var(--mut);font-size:.9rem;transition:.3s;opacity:0;transform:translateY(6px)}
+.detect.on{opacity:1;transform:none}
+.detect strong{color:#fff}
+
+/* ── شريط المنصات ── */
+.marquee{margin:56px 0 10px;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);direction:ltr}
+.track{display:flex;gap:14px;width:max-content;animation:slide 34s linear infinite}
+.marquee:hover .track{animation-play-state:paused}
+@keyframes slide{to{transform:translateX(-50%)}}
+.chip{display:flex;align-items:center;gap:10px;padding:11px 20px;border-radius:99px;background:var(--card);border:1px solid var(--line);white-space:nowrap;font-weight:600;transition:.3s;direction:rtl}
+.chip:hover{transform:translateY(-4px);border-color:var(--c,var(--p1));box-shadow:0 8px 24px color-mix(in srgb,var(--c,#8b5cf6) 40%,transparent)}
+.chip span{font-size:1.25rem}
+
+/* ── النتيجة ── */
+#result{margin:44px auto 0;max-width:820px;display:none}
+.res{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:20px;backdrop-filter:blur(14px);animation:pop .6s cubic-bezier(.2,1,.3,1) both;text-align:right}
+@keyframes pop{from{opacity:0;transform:translateY(30px) scale(.96)}}
+.head{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.thumb{width:130px;height:130px;border-radius:18px;background:linear-gradient(135deg,#1c1840,#0f0d24) center/cover;flex:none;border:1px solid var(--line);position:relative;overflow:hidden;display:grid;place-items:center;font-size:2.4rem}
+.thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 35%,rgba(255,255,255,.12) 50%,transparent 65%);transform:translateX(-120%);animation:glint 3.5s 1s infinite}
+@keyframes glint{60%,100%{transform:translateX(120%)}}
+.meta{flex:1;min-width:200px}
+.ok{display:inline-flex;align-items:center;gap:6px;color:var(--ok);font-size:.82rem;font-weight:700;background:rgba(52,211,153,.1);padding:3px 12px;border-radius:99px}
+.meta h3{font-size:1.2rem;margin:8px 0 4px;word-break:break-word;line-height:1.5}
+.meta p{color:var(--mut);font-size:.88rem}
+.items{display:grid;gap:10px;margin-top:20px}
+.item{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid var(--line);opacity:0;transform:translateX(24px);animation:slideIn .5s forwards;transition:.25s}
+.item:hover{border-color:var(--p2);background:rgba(6,182,212,.07);transform:translateX(-4px)}
+@keyframes slideIn{to{opacity:1;transform:none}}
+.ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:1.3rem;background:rgba(139,92,246,.16);flex:none}
+.item .t{flex:1;font-weight:600}.item .t small{display:block;color:var(--mut);font-weight:400;font-size:.8rem}
+.dl{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#fff;font-weight:700;font-size:.92rem;padding:10px 20px;border-radius:12px;background:var(--grad);transition:.25s;border:0;cursor:pointer;font-family:inherit}
+.dl:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(6,182,212,.4)}
+.all{margin-top:16px;width:100%;justify-content:center;padding:13px;background:rgba(255,255,255,.07);border:1px solid var(--line)}
+.all:hover{background:rgba(255,255,255,.12);box-shadow:none}
+.progress{height:4px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:14px;display:none}
+.progress i{display:block;height:100%;width:30%;background:var(--grad);border-radius:4px;animation:bar 1.3s ease-in-out infinite}
+@keyframes bar{0%{transform:translateX(330%)}100%{transform:translateX(-110%)}}
+body.busy .progress{display:block}
+
+/* ── أقسام ── */
+section{padding:84px 0 10px}
+.sec-h{text-align:center;margin-bottom:46px}
+.sec-h small{color:var(--p2);font-weight:700;letter-spacing:.05em}
+.sec-h h2{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;margin-top:4px}
+.sec-h p{color:var(--mut);margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.stat{text-align:center;padding:28px 16px;border-radius:22px;background:var(--card);border:1px solid var(--line)}
+.stat b{display:block;font-size:2.6rem;font-weight:900;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.card{position:relative;padding:28px 24px;border-radius:24px;background:var(--card);border:1px solid var(--line);transition:transform .25s,border-color .25s;transform-style:preserve-3d;overflow:hidden}
+.card::before{content:'';position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(var(--p1),transparent 65%);opacity:0;left:var(--mx,50%);top:var(--my,50%);transform:translate(-50%,-50%);transition:opacity .3s;pointer-events:none;filter:blur(20px)}
+.card:hover{border-color:rgba(139,92,246,.5)}.card:hover::before{opacity:.28}
+.card .ci{width:56px;height:56px;border-radius:17px;display:grid;place-items:center;font-size:1.7rem;margin-bottom:16px;background:var(--grad);box-shadow:0 10px 26px rgba(139,92,246,.35)}
+.card h3{font-size:1.15rem;margin-bottom:6px}.card p{color:var(--mut);font-size:.94rem}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;counter-reset:s}
+.step{position:relative;padding:30px 24px;border-radius:24px;border:1px dashed rgba(255,255,255,.18);background:rgba(255,255,255,.02)}
+.step::before{counter-increment:s;content:counter(s);position:absolute;top:-20px;right:22px;width:42px;height:42px;border-radius:50%;background:var(--grad);display:grid;place-items:center;font-weight:900;box-shadow:0 0 22px rgba(139,92,246,.6)}
+.step h3{margin-bottom:4px}.step p{color:var(--mut);font-size:.94rem}
+.faq{max-width:760px;margin:auto;display:grid;gap:12px}
+details{border-radius:18px;background:var(--card);border:1px solid var(--line);padding:0 20px;transition:.3s}
+details[open]{border-color:rgba(139,92,246,.5);background:rgba(139,92,246,.07)}
+summary{cursor:pointer;list-style:none;padding:18px 0;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'+';font-size:1.5rem;color:var(--p2);transition:.3s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{color:var(--mut);padding-bottom:18px}
+footer{margin-top:90px;padding:34px 0 46px;text-align:center;color:var(--mut);border-top:1px solid var(--line);font-size:.9rem}
+footer b{color:#fff}
+
+/* ── Reveal + Toast ── */
+.rv{opacity:0;transform:translateY(34px);transition:opacity .8s,transform .8s cubic-bezier(.2,.9,.2,1)}
+.rv.in{opacity:1;transform:none}
+#toasts{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:99;display:grid;gap:10px;width:min(420px,calc(100% - 28px))}
+.toast{padding:14px 18px;border-radius:16px;background:rgba(18,15,38,.92);backdrop-filter:blur(14px);border:1px solid var(--line);display:flex;gap:10px;align-items:center;animation:tin .4s cubic-bezier(.2,1,.3,1) both;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+.toast.err{border-color:rgba(251,113,133,.55)}.toast.good{border-color:rgba(52,211,153,.55)}
+.toast.out{animation:tout .35s forwards}
+@keyframes tin{from{opacity:0;transform:translateY(30px) scale(.9)}}
+@keyframes tout{to{opacity:0;transform:translateY(20px) scale(.95)}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="mesh"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
+<div class="grain"></div>
+
+<nav>
+  <a class="logo" href="#top"><i>⚡</i> Ødin</a>
+  <ul>
+    <li><a class="l" href="#features">المميزات</a></li>
+    <li><a class="l" href="#how">إزاي بيشتغل</a></li>
+    <li><a class="l" href="#faq">الأسئلة</a></li>
+  </ul>
+</nav>
+
+<main class="wrap" id="top">
+  <header class="hero">
+    <div class="badge"><b></b> مجاني • بدون تسجيل • سريع</div>
+    <h1>حمّل من <span class="shimmer">أي منصة</span><br>بضغطة واحدة</h1>
+    <p class="sub">الصق الرابط وهنجيبلك الفيديو أو الصورة أو الصوت بأعلى جودة متاحة — من تيك توك وانستجرام وفيسبوك ويوتيوب وغيرهم.</p>
+
+    <form class="box" id="form" autocomplete="off">
+      <div class="inner">
+        <label class="field">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.7-1.7"/></svg>
+          <input id="url" type="text" inputmode="url" placeholder="الصق رابط الفيديو هنا..." aria-label="الرابط">
+          <button type="button" class="mini" id="paste">لصق</button>
+        </label>
+        <button class="go" id="go" type="submit"><span class="spin"></span><span class="arrow">تحميل</span><svg class="arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M6 11l6 6 6-6M5 21h14"/></svg></button>
+      </div>
+    </form>
+    <div class="progress" style="max-width:700px;margin-inline:auto"><i></i></div>
+    <div class="detect" id="detect"></div>
+
+    <div id="result"></div>
+
+    <div class="marquee"><div class="track" id="track"></div></div>
+  </header>
+
+  <section class="rv">
+    <div class="stats">
+      <div class="stat"><b data-n="12">0</b><span>منصة مدعومة</span></div>
+      <div class="stat"><b data-n="99" data-s="%">0</b><span>نسبة النجاح</span></div>
+      <div class="stat"><b data-n="3">0</b><span>ثواني متوسط الوقت</span></div>
+      <div class="stat"><b data-n="0">0</b><span>علامة مائية مضافة</span></div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="sec-h rv"><small>المميزات</small><h2>كل اللي محتاجه في مكان واحد</h2><p>تصميم بسيط وأداء قوي</p></div>
+    <div class="grid">
+      <div class="card rv"><div class="ci">🚀</div><h3>سرعة خارقة</h3><p>السيرفر بيجيب الملف مباشرة من المصدر ويبعتهولك من غير ما يعدّي على وسيط بطيء.</p></div>
+      <div class="card rv"><div class="ci">🎬</div><h3>فيديو وصور وصوت</h3><p>بيتعرّف على نوع الوسائط تلقائياً ويعرضها لك مرتبة وجاهزة للتحميل.</p></div>
+      <div class="card rv"><div class="ci">🖼️</div><h3>ألبومات كاملة</h3><p>لو المنشور فيه أكتر من صورة أو فيديو بتلاقيهم كلهم وتحمّل الكل بضغطة.</p></div>
+      <div class="card rv"><div class="ci">🔒</div><h3>خصوصية وأمان</h3><p>مفيش تسجيل ولا حفظ لروابطك أو ملفاتك على السيرفر.</p></div>
+      <div class="card rv"><div class="ci">📱</div><h3>شغال على كل الأجهزة</h3><p>موبايل أو تابلت أو كمبيوتر — التصميم بيتأقلم مع أي شاشة.</p></div>
+      <div class="card rv"><div class="ci">🔗</div><h3>روابط ذكية</h3><p>بيفهم روابط المشاركة وبيشيل البارامترات الزيادة تلقائياً.</p></div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="sec-h rv"><small>إزاي بيشتغل</small><h2>3 خطوات وخلاص</h2></div>
+    <div class="steps">
+      <div class="step rv"><h3>انسخ الرابط</h3><p>افتح المنصة واضغط "مشاركة" ثم "نسخ الرابط".</p></div>
+      <div class="step rv"><h3>الصقه هنا</h3><p>اضغط "لصق" أو الصق الرابط في الخانة واضغط تحميل.</p></div>
+      <div class="step rv"><h3>نزّل الملف</h3><p>اختار الملف اللي عايزه وهيتحفظ على جهازك فوراً.</p></div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="sec-h rv"><small>الأسئلة الشائعة</small><h2>عندك استفسار؟</h2></div>
+    <div class="faq rv">
+      <details><summary>هل الخدمة مجانية؟</summary><p>أيوه، مجانية بالكامل وبدون تسجيل.</p></details>
+      <details><summary>إيه المنصات المدعومة؟</summary><p>تيك توك، انستجرام، فيسبوك، يوتيوب، تويتر/X، سناب شات، بينترست، ثريدز، كواي، لايكي، كاب كات وغيرها.</p></details>
+      <details><summary>ليه ساعات بيفشل التحميل؟</summary><p>غالباً الحساب خاص أو المنشور اتحذف أو المنصة غيّرت حاجة. جرّب رابط تاني أو حاول بعد شوية.</p></details>
+      <details><summary>الملفات بتتخزن عندكم؟</summary><p>لا، الملف بيعدّي من السيرفر لجهازك مباشرة من غير تخزين.</p></details>
+    </div>
+  </section>
+
+  <footer>صُنع بـ ❤️ بواسطة <b>Ødin</b> — حمّل المحتوى المسموح لك فقط واحترم حقوق أصحابه.</footer>
+</main>
+
+<div id="toasts"></div>
+
+<script>
+const $ = s => document.querySelector(s)
+const platforms = [
+  ['تيك توك','🎵','#ff0050',/tiktok\.com/i],['انستجرام','📸','#e1306c',/instagram\.com|instagr\.am/i],
+  ['فيسبوك','👍','#1877f2',/facebook\.com|fb\.watch|fb\.com/i],['يوتيوب','▶️','#ff0000',/youtube\.com|youtu\.be/i],
+  ['تويتر / X','🐦','#1d9bf0',/twitter\.com|x\.com/i],['سناب شات','👻','#fffc00',/snapchat\.com/i],
+  ['بينترست','📌','#e60023',/pinterest\.|pin\.it/i],['ثريدز','🧵','#ffffff',/threads\.net/i],
+  ['كواي','🎥','#ff7a00',/kwai|kuaishou/i],['لايكي','💜','#a855f7',/likee/i],['كاب كات','✂️','#06b6d4',/capcut\.com/i]
+]
+
+// شريط المنصات
+const chips = platforms.map(p => `<div class="chip" style="--c:${p[2]}"><span>${p[1]}</span>${p[0]}</div>`).join('')
+$('#track').innerHTML = chips + chips
+
+// Toast
+function toast(msg, type = '') {
+  const t = document.createElement('div')
+  t.className = 'toast ' + type
+  t.textContent = (type === 'err' ? '⚠️ ' : type === 'good' ? '✅ ' : 'ℹ️ ') + msg
+  $('#toasts').appendChild(t)
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 350) }, 3800)
+}
+
+// كشف المنصة
+const urlIn = $('#url'), detect = $('#detect')
+urlIn.addEventListener('input', () => {
+  const p = platforms.find(p => p[3].test(urlIn.value))
+  if (p) { detect.innerHTML = `${p[1]} تم التعرف على المنصة: <strong>${p[0]}</strong>`; detect.classList.add('on') }
+  else detect.classList.remove('on')
+})
+$('#paste').onclick = async () => {
+  try { urlIn.value = await navigator.clipboard.readText(); urlIn.dispatchEvent(new Event('input')); urlIn.focus() }
+  catch { toast('المتصفح منع اللصق التلقائي — الصق يدوياً', 'err') }
+}
+
+// جلب النتيجة
+const KIND = { video: ['🎬','فيديو','mp4'], image: ['🖼️','صورة','jpg'], audio: ['🎧','صوت','mp3'] }
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+const dlUrl = (u, n) => `/api/download?u=${encodeURIComponent(u)}&n=${encodeURIComponent(n)}`
+
+$('#form').addEventListener('submit', async e => {
+  e.preventDefault()
+  const val = urlIn.value.trim()
+  if (!/https?:\/\//i.test(val)) return toast('الصق رابط صحيح الأول', 'err')
+  const btn = $('#go'); btn.disabled = true; btn.classList.add('loading'); document.body.classList.add('busy')
+  $('#result').style.display = 'none'
+  try {
+    const r = await fetch('/api/info', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: val }) })
+    const d = await r.json()
+    if (!d.ok) throw new Error(d.error || 'حصل خطأ')
+    render(d); toast('تم العثور على ' + d.items.length + ' ملف', 'good')
+  } catch (err) { toast(err.message, 'err') }
+  finally { btn.disabled = false; btn.classList.remove('loading'); document.body.classList.remove('busy') }
+})
+
+function render(d) {
+  const base = (d.title || 'download').slice(0, 40)
+  const thumb = d.thumbnail ? `style="background-image:url('/api/download?inline=1&u=${encodeURIComponent(d.thumbnail)}')"` : ''
+  const items = d.items.map((it, i) => {
+    const [ic, lbl, ext] = KIND[it.kind] || KIND.video
+    return `<div class="item" style="animation-delay:${i * .07}s">
+      <div class="ic">${ic}</div>
+      <div class="t">${lbl} ${d.items.length > 1 ? it.index : ''}<small>${ext.toUpperCase()} • أعلى جودة متاحة</small></div>
+      <a class="dl" href="${dlUrl(it.url, base + '_' + it.index)}" download>⬇ تحميل</a></div>`
+  }).join('')
+  const box = $('#result')
+  box.innerHTML = `<div class="res">
+    <div class="head"><div class="thumb" ${thumb}>${d.thumbnail ? '' : '🎞️'}</div>
+      <div class="meta"><span class="ok">✓ جاهز للتحميل</span><h3>${esc(d.title)}</h3>${d.author ? `<p>@${esc(d.author)}</p>` : ''}</div></div>
+    <div class="items">${items}</div>
+    ${d.items.length > 1 ? '<button class="dl all" id="all">⬇ تحميل الكل</button>' : ''}</div>`
+  box.style.display = 'block'
+  box.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  const all = $('#all')
+  if (all) all.onclick = () => d.items.forEach((it, i) => setTimeout(() => {
+    const a = document.createElement('a'); a.href = dlUrl(it.url, base + '_' + it.index); a.download = ''
+    document.body.appendChild(a); a.click(); a.remove()
+  }, i * 700))
+}
+
+// Reveal
+const io = new IntersectionObserver(es => es.forEach(en => {
+  if (!en.isIntersecting) return
+  en.target.classList.add('in')
+  en.target.querySelectorAll?.('[data-n]').forEach(count)
+  if (en.target.dataset.n) count(en.target)
+  io.unobserve(en.target)
+}), { threshold: .15 })
+document.querySelectorAll('.rv').forEach((el, i) => { el.style.transitionDelay = (i % 3) * .1 + 's'; io.observe(el) })
+function count(el) {
+  if (el.done) return; el.done = true
+  const to = +el.dataset.n, s = el.dataset.s || '', t0 = performance.now()
+  const f = t => { const p = Math.min((t - t0) / 1600, 1); el.textContent = Math.round(to * (1 - Math.pow(1 - p, 4))) + s; if (p < 1) requestAnimationFrame(f) }
+  requestAnimationFrame(f)
+}
+
+// تأثير الإضاءة على الكروت
+document.querySelectorAll('.card').forEach(c => {
+  c.addEventListener('mousemove', e => {
+    const r = c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top
+    c.style.setProperty('--mx', x + 'px'); c.style.setProperty('--my', y + 'px')
+    c.style.transform = `perspective(700px) rotateY(${(x / r.width - .5) * -9}deg) rotateX(${(y / r.height - .5) * 9}deg) translateY(-4px)`
+  })
+  c.addEventListener('mouseleave', () => c.style.transform = '')
+})
+
+// جسيمات الخلفية
+const cv = $('#fx'), cx = cv.getContext('2d'); let W, H, pts = [], mouse = { x: -999, y: -999 }
+function size() { W = cv.width = innerWidth; H = cv.height = innerHeight; pts = Array.from({ length: Math.min(90, W / 14 | 0) }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - .5) * .35, vy: (Math.random() - .5) * .35, r: Math.random() * 1.6 + .4 })) }
+addEventListener('resize', size); size()
+addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY })
+;(function loop() {
+  cx.clearRect(0, 0, W, H)
+  for (const p of pts) {
+    p.x += p.vx; p.y += p.vy
+    if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1
+    cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 6.28); cx.fillStyle = 'rgba(190,180,255,.7)'; cx.fill()
+  }
+  for (let i = 0; i < pts.length; i++) {
+    for (let j = i + 1; j < pts.length; j++) {
+      const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y)
+      if (d < 120) { cx.strokeStyle = `rgba(139,92,246,${.2 * (1 - d / 120)})`; cx.lineWidth = 1; cx.beginPath(); cx.moveTo(pts[i].x, pts[i].y); cx.lineTo(pts[j].x, pts[j].y); cx.stroke() }
+    }
+    const m = Math.hypot(pts[i].x - mouse.x, pts[i].y - mouse.y)
+    if (m < 160) { cx.strokeStyle = `rgba(6,182,212,${.5 * (1 - m / 160)})`; cx.beginPath(); cx.moveTo(pts[i].x, pts[i].y); cx.lineTo(mouse.x, mouse.y); cx.stroke() }
+  }
+  requestAnimationFrame(loop)
+})()
+</script>
+</body>
+</html>
